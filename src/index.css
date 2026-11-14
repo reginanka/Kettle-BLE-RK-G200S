@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: 'Fira Sans', system-ui, -apple-system, sans-serif;
+    --font-display: 'Fira Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Old Standard TT', Georgia, serif;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes steam-rise {
+  0% {
+    transform: translateY(4px) scale(0.9);
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-20px) scale(1.25);
+    opacity: 0;
+  }
+}
+
+.steam-plume {
+  animation: steam-rise 1.9s ease-out infinite;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .steam-plume,
+  .animate-pulse,
+  .animate-bounce {
+    animation: none !important;
+  }
+}

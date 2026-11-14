@@ -1,0 +1,77 @@
+import { DrinkPreset } from '../types/kettle';
+import { MODE } from '../services/kettleProtocol';
+
+export const DRINKS_LIBRARY: DrinkPreset[] = [
+  {
+    id: 'baby-formula',
+    name: 'Дитяча суміш',
+    category: 'Для дітей',
+    temp: 40,
+    mode: MODE.BOIL_HEAT,
+    note: 'Спочатку кип’ятіння, потім підтримка 40°C для безпечного приготування',
+  },
+  {
+    id: 'warm-water',
+    name: 'Тепла вода з лимоном',
+    category: 'Щоденне',
+    temp: 45,
+    mode: MODE.HEAT,
+    note: 'Швидкий делікатний підігрів без зайвого кип’ятіння',
+  },
+  {
+    id: 'matcha',
+    name: 'Матча',
+    category: 'Японський чай',
+    temp: 72,
+    mode: MODE.HEAT,
+    note: 'М’яка солодкість без гіркоти для збивання вінчиком',
+  },
+  {
+    id: 'white-tea',
+    name: 'Білий чай (Бай Хао)',
+    category: 'Делікатні чаї',
+    temp: 75,
+    mode: MODE.HEAT,
+    note: 'Зберігає квітковий аромат і легкий настій',
+  },
+  {
+    id: 'green-tea',
+    name: 'Зелений чай (Сенча / Лунцзін)',
+    category: 'Зелені чаї',
+    temp: 80,
+    mode: MODE.HEAT,
+    note: 'Ідеальна температура, щоб не «запарити» листя',
+  },
+  {
+    id: 'oolong',
+    name: 'Улун (Те Гуань Інь)',
+    category: 'Улуни',
+    temp: 85,
+    mode: MODE.HEAT,
+    note: 'Розкриває вершковий і фруктовий букет проливами',
+  },
+  {
+    id: 'french-press',
+    name: 'Кава у френч-пресі / Пуровер',
+    category: 'Кава',
+    temp: 93,
+    mode: MODE.HEAT,
+    note: 'Збалансована екстракція без перепаленої кислотності',
+  },
+  {
+    id: 'puerh-black',
+    name: 'Пуер / Чорний чай',
+    category: 'Насичені чаї',
+    temp: 96,
+    mode: MODE.BOIL_HEAT,
+    note: 'Глибока екстракція після повного кип’ятіння',
+  },
+  {
+    id: 'herbal',
+    name: 'Трав’яний або ягідний збір',
+    category: 'Настої',
+    temp: 100,
+    mode: MODE.BOIL,
+    note: 'Повне кип’ятіння для розкриття м’яти, шипшини чи ромашки',
+  },
+];
