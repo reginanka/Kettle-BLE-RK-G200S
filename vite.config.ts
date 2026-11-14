@@ -12,6 +12,12 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
+      isCapacitorBuild && {
+        name: 'capacitor-viewport-fix',
+        transformIndexHtml(html: string) {
+          return html.replace(/,\s*viewport-fit=cover/g, '');
+        },
+      },
       VitePWA({
         disable: isCapacitorBuild,
         registerType: 'autoUpdate',

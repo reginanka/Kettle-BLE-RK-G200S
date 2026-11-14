@@ -46,7 +46,7 @@ const uk = {
   header: {
     brand: 'Kettle BLE',
     connecting: 'Підключення...',
-    waitingPair: 'Очікує «+» на чайнику',
+    waitingPair: 'Очікує ⏻ / «+» на чайнику',
     offline: 'Офлайн',
     nearby: 'Поруч',
     searching: 'Пошук...',
@@ -71,15 +71,15 @@ const uk = {
     retry: 'Спробувати ще',
     pairingTitle: 'Потрібна прив’язка чайника (0xFF)',
     pairingActive: (attempt: number) =>
-      `Спроба ${attempt}/40 — утримуйте «+» на ручці чайника 3–5 сек до звукового сигналу.`,
+      `Спроба ${attempt}/40 — утримуйте кнопку живлення ⏻ на ручці 3–5 сек до 3 сигналів (на деяких ревізіях «+»).`,
     pairingHint:
-      'Затисніть і тримайте кнопку «+» на ручці чайника 3–5 секунд, потім натисніть «Прив’язати зараз».',
+      'У режимі очікування затисніть кнопку ввімкнення ⏻ на ручці чайника на 3–5 сек до 3 сигналів і миготіння індикаторів, потім натисніть «Прив’язати зараз».',
     pairNow: 'Прив’язати зараз',
     newKey: 'Новий ключ',
     guide: 'Інструкція',
     disconnectedTitle: 'Чайник не підключено',
     disconnectedDesc:
-      'Затисніть кнопку «+» на ручці чайника на 3–5 сек для першого підключення через Bluetooth.',
+      'Затисніть кнопку ввімкнення ⏻ на ручці чайника на 3–5 сек до 3 сигналів, щоб увімкнути режим прив’язки Bluetooth.',
     waiting: 'Очікування',
     holding: 'Підтримка',
     toControls: 'до пульта',
@@ -247,7 +247,7 @@ const uk = {
     deriveKey: 'Зібрати ключ',
     disconnectBtn: 'Розірвати з’єднання',
     connectBtn: 'Знайти і підключити',
-    pairNeeded: 'Потрібна прив’язка — затисніть «+» на 3–5 секунд.',
+    pairNeeded: 'Потрібна прив’язка — затисніть кнопку живлення ⏻ на 3–5 секунд до 3 сигналів.',
     diagTitle: 'Параметри та діагностика чайника',
     firmware: 'Прошивка',
     mode: 'Режим',
@@ -289,7 +289,7 @@ const uk = {
     sub: 'Покрокова інструкція першого з’єднання',
     step1Title: '1. Переведіть у режим пари',
     step1Body:
-      'Встановіть чайник на базу. Затисніть та утримуйте кнопку «+» на ручці протягом 3–5 секунд, доки не пролунають короткі сигнали. Якщо не спрацювало — зніміть з бази, затисніть обидві кнопки та поставте назад.',
+      'Поставте чайник на підключену базу (у режим очікування). Затисніть та утримуйте кнопку ввімкнення ⏻ на ручці 3–5 секунд, доки не пролунають 3 короткі сигнали та індикатори не почнуть почергово мигати (на деяких ревізіях це кнопка «+»). Якщо не спрацювало — зніміть чайник з бази на 10 секунд і поставте назад.',
     step2Title: '2. Закрийте інші BLE-додатки',
     step2Body:
       'Якщо на телефоні у фоні працює офіційний або інший Bluetooth-додаток, він може займати канал чайника. Обов’язково закрийте його перед підключенням.',
@@ -388,7 +388,7 @@ const en: TranslationSet = {
   header: {
     brand: 'Kettle BLE',
     connecting: 'Connecting...',
-    waitingPair: 'Hold "+" on kettle',
+    waitingPair: 'Hold ⏻ / "+" on kettle',
     offline: 'Offline',
     nearby: 'Nearby',
     searching: 'Scanning...',
@@ -413,15 +413,15 @@ const en: TranslationSet = {
     retry: 'Try again',
     pairingTitle: 'Kettle pairing required (0xFF)',
     pairingActive: (attempt: number) =>
-      `Attempt ${attempt}/40 — hold "+" on the kettle handle for 3–5 seconds until it beeps.`,
+      `Attempt ${attempt}/40 — hold Power ⏻ on the kettle handle for 3–5 sec until 3 beeps ("+" on some revisions).`,
     pairingHint:
-      'Press and hold the "+" button on the kettle handle for 3–5 seconds, then tap "Pair now".',
+      'In standby, press and hold the Power ⏻ button on the kettle handle for 3–5 seconds until 3 beeps & flashing LEDs, then tap "Pair now".',
     pairNow: 'Pair now',
     newKey: 'New key',
     guide: 'Guide',
     disconnectedTitle: 'Kettle not connected',
     disconnectedDesc:
-      'Hold the "+" button on the kettle handle for 3–5 sec for first-time Bluetooth pairing.',
+      'Hold the Power ⏻ button on the kettle handle for 3–5 sec until 3 beeps to enter Bluetooth pairing mode.',
     waiting: 'Standby',
     holding: 'Warm',
     toControls: 'controls',
@@ -588,7 +588,7 @@ const en: TranslationSet = {
     deriveKey: 'Derive key',
     disconnectBtn: 'Disconnect',
     connectBtn: 'Scan & connect',
-    pairNeeded: 'Pairing required — hold "+" for 3–5 seconds.',
+    pairNeeded: 'Pairing required — hold Power ⏻ for 3–5 seconds until 3 beeps.',
     diagTitle: 'Kettle parameters & diagnostics',
     firmware: 'Firmware',
     mode: 'Mode',
@@ -630,7 +630,7 @@ const en: TranslationSet = {
     sub: 'Step-by-step first connection guide',
     step1Title: '1. Enter pairing mode',
     step1Body:
-      'Place the kettle on its base. Press and hold the "+" button on the handle for 3–5 seconds until it beeps. If that fails, lift it off the base, hold both buttons, and place it back.',
+      'Place the kettle on its powered base in standby. Press and hold the Power ⏻ button on the handle for 3–5 seconds until you hear 3 short beeps and the LEDs flash alternately ("+" on some hardware revisions). If it fails, lift it off the base for 10 seconds and place it back.',
     step2Title: '2. Close other BLE apps',
     step2Body:
       'If an official or third-party Bluetooth app is running in the background, it may hold the kettle connection. Close it before connecting here.',

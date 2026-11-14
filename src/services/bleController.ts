@@ -393,7 +393,7 @@ class BleController {
       if (authRes && authRes[3] === 0x01) {
         await this.onAuthorized();
       } else {
-        this.log('SYS', [], 'Чайник очікує підтвердження прив’язки. Затисніть кнопку «+» на ручці чайника на 3–5 сек.');
+        this.log('SYS', [], 'Чайник очікує підтвердження прив’язки. Затисніть кнопку ввімкнення ⏻ на ручці на 3–5 сек до 3 сигналів (на деяких ревізіях «+»).');
         this.startPairingRoutine();
       }
 
@@ -440,7 +440,7 @@ class BleController {
       const nextAttempt = this.state.pairingAttempts + 1;
       if (nextAttempt > 40) {
         this.stopPairingRoutine();
-        this.log('SYS', [], 'Час очікування прив’язки вичерпано. Натисніть «Прив’язати» та утримуйте «+» на чайнику.');
+        this.log('SYS', [], 'Час очікування прив’язки вичерпано. Затисніть кнопку ввімкнення ⏻ до 3 сигналів і натисніть «Прив’язати».');
         return;
       }
 

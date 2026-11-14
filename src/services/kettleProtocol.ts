@@ -595,7 +595,7 @@ export function interpretPacket(bytes: number[]): { name: string; notes?: string
   if (cmd === CMD.AUTH && bytes.length === 5) {
     return {
       name,
-      notes: bytes[3] === 0x01 ? 'Авторизацію підтверджено' : 'Очікує підтвердження «+» на чайнику',
+      notes: bytes[3] === 0x01 ? 'Авторизацію підтверджено' : 'Очікує підтвердження (⏻ / «+») на чайнику',
     };
   }
 

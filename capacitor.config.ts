@@ -8,6 +8,12 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
   },
   plugins: {
+    SystemBars: {
+      insetsHandling: 'native',
+      initialViewportFitValueHint: 'contain',
+      style: 'DARK',
+      hidden: false,
+    },
     BluetoothLe: {
       displayStrings: {
         scanning: 'Пошук чайника RK-G200S...',
