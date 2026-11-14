@@ -1,9 +1,11 @@
+import { Capacitor } from '@capacitor/core';
+import { BleClient, type BleDevice, type BleService } from '@capacitor-community/bluetooth-le';
 import { PROTOCOL_CONSTANTS } from './kettleProtocol';
 
 /**
  * Abstract BLE Transport interface.
- * Currently backed by Web Bluetooth for browser / GitHub Pages / TWA.
- * Can be swapped for @capacitor-community/bluetooth-le when building native Android APK.
+ * Uses Web Bluetooth in browsers / PWA / TWA and @capacitor-community/bluetooth-le
+ * inside native Capacitor Android / iOS builds.
  */
 export interface KettleTransport {
   readonly deviceName: string;
@@ -47,8 +49,24 @@ interface BluetoothDeviceLike {
   removeEventListener: (type: string, listener: () => void) => void;
 }
 
+export function isNativeCapacitor(): boolean {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+}
+
 export function isWebBluetoothSupported(): boolean {
   return typeof navigator !== 'undefined' && 'bluetooth' in navigator;
+}
+
+export function isBleSupported(): boolean {
+  return isNativeCapacitor() || isWebBluetoothSupported();
+}
+
+export function createDefaultBleTransport(): KettleTransport {
+  return isNativeCapacitor() ? new CapacitorBleTransport() : new WebBluetoothTransport();
 }
 
 export class WebBluetoothTransport implements KettleTransport {
@@ -122,7 +140,6 @@ export class WebBluetoothTransport implements KettleTransport {
         if (!this.device.gatt) {
           throw new Error('GATT інтерфейс недоступний');
         }
-
         if (!this.device.gatt.connected) {
           onLog(`Підключення GATT (спроба ${attempt}/3)...`);
           this.server = await this.device.gatt.connect();
@@ -204,6 +221,7 @@ export class WebBluetoothTransport implements KettleTransport {
       }
       this.notifyHandler = null;
     }
+
     if (this.device && this.disconnectHandler) {
       try {
         this.device.removeEventListener('gattserverdisconnected', this.disconnectHandler);
@@ -211,6 +229,7 @@ export class WebBluetoothTransport implements KettleTransport {
         // ignore
       }
     }
+
     if (this.device?.gatt?.connected) {
       try {
         this.device.gatt.disconnect();
@@ -218,8 +237,271 @@ export class WebBluetoothTransport implements KettleTransport {
         // ignore
       }
     }
+
     this.writeChar = null;
     this.notifyChar = null;
     this.server = null;
+  }
+}
+
+interface CapacitorCharTarget {
+  serviceUuid: string;
+  charUuid: string;
+  writeWithoutResponse: boolean;
+}
+
+export class CapacitorBleTransport implements KettleTransport {
+  public deviceName = 'RK-G200S';
+  private deviceId: string | null = null;
+  private writeTarget: CapacitorCharTarget | null = null;
+  private notifyTarget: CapacitorCharTarget | null = null;
+  private initialized = false;
+
+  private clearRefs(): void {
+    this.writeTarget = null;
+    this.notifyTarget = null;
+    this.deviceId = null;
+  }
+
+  private findCharacteristicTargets(services: BleService[]): {
+    writeTarget: CapacitorCharTarget | null;
+    notifyTarget: CapacitorCharTarget | null;
+  } {
+    let writeTarget: CapacitorCharTarget | null = null;
+    let notifyTarget: CapacitorCharTarget | null = null;
+
+    // Prefer exact Nordic UART Service (NUS) characteristics first
+    for (const service of services) {
+      const sUuid = service.uuid.toLowerCase();
+      for (const ch of service.characteristics) {
+        const cUuid = ch.uuid.toLowerCase();
+        if (cUuid === PROTOCOL_CONSTANTS.RX_CHAR_UUID && (ch.properties.write || ch.properties.writeWithoutResponse)) {
+          writeTarget = {
+            serviceUuid: service.uuid,
+            charUuid: ch.uuid,
+            writeWithoutResponse: ch.properties.writeWithoutResponse,
+          };
+        }
+        if (cUuid === PROTOCOL_CONSTANTS.TX_CHAR_UUID && (ch.properties.notify || ch.properties.indicate)) {
+          notifyTarget = {
+            serviceUuid: service.uuid,
+            charUuid: ch.uuid,
+            writeWithoutResponse: false,
+          };
+        }
+        if (sUuid === PROTOCOL_CONSTANTS.SERVICE_NUS_UUID) {
+          if (!writeTarget && (ch.properties.write || ch.properties.writeWithoutResponse)) {
+            writeTarget = {
+              serviceUuid: service.uuid,
+              charUuid: ch.uuid,
+              writeWithoutResponse: ch.properties.writeWithoutResponse,
+            };
+          }
+          if (!notifyTarget && (ch.properties.notify || ch.properties.indicate)) {
+            notifyTarget = {
+              serviceUuid: service.uuid,
+              charUuid: ch.uuid,
+              writeWithoutResponse: false,
+            };
+          }
+        }
+      }
+    }
+
+    // Fallback to any write/notify characteristic pair
+    if (!writeTarget || !notifyTarget) {
+      for (const service of services) {
+        for (const ch of service.characteristics) {
+          if (!notifyTarget && (ch.properties.notify || ch.properties.indicate)) {
+            notifyTarget = {
+              serviceUuid: service.uuid,
+              charUuid: ch.uuid,
+              writeWithoutResponse: false,
+            };
+          }
+          if (!writeTarget && (ch.properties.write || ch.properties.writeWithoutResponse)) {
+            writeTarget = {
+              serviceUuid: service.uuid,
+              charUuid: ch.uuid,
+              writeWithoutResponse: ch.properties.writeWithoutResponse,
+            };
+          }
+        }
+      }
+    }
+
+    return { writeTarget, notifyTarget };
+  }
+
+  public async connect(
+    onDisconnected: () => void,
+    onNotify: (bytes: Uint8Array) => void,
+    onLog: (msg: string) => void
+  ): Promise<void> {
+    if (!this.initialized) {
+      await BleClient.initialize({ androidNeverForLocation: false });
+      this.initialized = true;
+    }
+
+    const enabled = await BleClient.isEnabled();
+    if (!enabled) {
+      try {
+        await BleClient.requestEnable();
+      } catch {
+        throw new Error('Увімкніть Bluetooth на пристрої для підключення до чайника.');
+      }
+    }
+
+    onLog('Пошук Bluetooth пристрою RK-G200S (Capacitor BLE)...');
+
+    let device: BleDevice | null = null;
+    try {
+      device = await BleClient.requestDevice({
+        namePrefix: PROTOCOL_CONSTANTS.DEVICE_PREFIX_FILTER,
+        optionalServices: [
+          PROTOCOL_CONSTANTS.SERVICE_NUS_UUID,
+          PROTOCOL_CONSTANTS.SERVICE_FFF0_UUID,
+        ],
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/cancel|dismiss|aborted/i.test(msg)) {
+        throw new Error('Вибір пристрою скасовано.');
+      }
+      onLog('Фільтр імені не знайшов пристрій, відкриття загального списку...');
+      try {
+        device = await BleClient.requestDevice({
+          optionalServices: [
+            PROTOCOL_CONSTANTS.SERVICE_NUS_UUID,
+            PROTOCOL_CONSTANTS.SERVICE_FFF0_UUID,
+          ],
+        });
+      } catch (fallbackErr) {
+        const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+        if (/cancel|dismiss|aborted/i.test(fallbackMsg)) {
+          throw new Error('Вибір пристрою скасовано.');
+        }
+        throw fallbackErr instanceof Error ? fallbackErr : new Error(fallbackMsg);
+      }
+    }
+
+    if (!device) {
+      throw new Error('Пристрій не вибрано');
+    }
+
+    this.deviceId = device.deviceId;
+    this.deviceName = device.name || 'RK-G200S';
+    onLog(`Вибрано: ${this.deviceName}. Підключення до GATT...`);
+
+    let writeTarget: CapacitorCharTarget | null = null;
+    let notifyTarget: CapacitorCharTarget | null = null;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        onLog(`Підключення GATT (спроба ${attempt}/3)...`);
+        await BleClient.connect(
+          this.deviceId,
+          (disconnectedId) => {
+            if (disconnectedId === this.deviceId) {
+              this.clearRefs();
+              onDisconnected();
+            }
+          },
+          { timeout: 10000 }
+        );
+        await new Promise((r) => setTimeout(r, 350));
+
+        let services = await BleClient.getServices(this.deviceId);
+        if (services.length === 0) {
+          await BleClient.discoverServices(this.deviceId);
+          services = await BleClient.getServices(this.deviceId);
+        }
+
+        const targets = this.findCharacteristicTargets(services);
+        writeTarget = targets.writeTarget;
+        notifyTarget = targets.notifyTarget;
+
+        if (writeTarget && notifyTarget) break;
+        throw new Error('Не знайдено характеристики write/notify');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        onLog(`GATT спроба ${attempt} не вдалась: ${msg}`);
+        try {
+          await BleClient.disconnect(this.deviceId);
+        } catch {
+          // ignore
+        }
+        if (attempt >= 3) {
+          this.clearRefs();
+          throw err instanceof Error ? err : new Error(msg);
+        }
+        await new Promise((r) => setTimeout(r, 750));
+      }
+    }
+
+    if (!writeTarget || !notifyTarget || !this.deviceId) {
+      this.clearRefs();
+      throw new Error('У пристрої відсутня пара write/notify (це не RK-G200S?)');
+    }
+
+    this.writeTarget = writeTarget;
+    this.notifyTarget = notifyTarget;
+
+    await BleClient.startNotifications(
+      this.deviceId,
+      this.notifyTarget.serviceUuid,
+      this.notifyTarget.charUuid,
+      (value: DataView) => {
+        const copy = new Uint8Array(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
+        onNotify(copy);
+      }
+    );
+
+    onLog('Канал сповіщень TX активовано.');
+  }
+
+  public async write(packet: Uint8Array): Promise<void> {
+    if (!this.deviceId || !this.writeTarget) {
+      throw new Error('Канал запису BLE недоступний');
+    }
+    const copy = Uint8Array.from(packet);
+    const view = new DataView(copy.buffer);
+    if (this.writeTarget.writeWithoutResponse) {
+      await BleClient.writeWithoutResponse(
+        this.deviceId,
+        this.writeTarget.serviceUuid,
+        this.writeTarget.charUuid,
+        view
+      );
+    } else {
+      await BleClient.write(
+        this.deviceId,
+        this.writeTarget.serviceUuid,
+        this.writeTarget.charUuid,
+        view
+      );
+    }
+  }
+
+  public disconnect(): void {
+    const devId = this.deviceId;
+    const notify = this.notifyTarget;
+    this.clearRefs();
+
+    if (!devId) return;
+    void (async () => {
+      if (notify) {
+        try {
+          await BleClient.stopNotifications(devId, notify.serviceUuid, notify.charUuid);
+        } catch {
+          // ignore
+        }
+      }
+      try {
+        await BleClient.disconnect(devId);
+      } catch {
+        // ignore
+      }
+    })();
   }
 }

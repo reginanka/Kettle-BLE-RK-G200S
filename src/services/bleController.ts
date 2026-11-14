@@ -48,8 +48,8 @@ import {
 } from './kettleProtocol';
 import {
   KettleTransport,
-  WebBluetoothTransport,
-  isWebBluetoothSupported,
+  createDefaultBleTransport,
+  isBleSupported,
 } from './bleTransport';
 import {
   loadAlertSettings,
@@ -104,7 +104,7 @@ function modeCodeToName(modeCode: number, running: boolean): KettleModeName {
 }
 
 class BleController {
-  private transport: KettleTransport = new WebBluetoothTransport();
+  private transport: KettleTransport = createDefaultBleTransport();
 
   private stateListeners = new Set<StateCallback>();
   private logListeners = new Set<LogCallback>();
@@ -173,7 +173,7 @@ class BleController {
   };
 
   public isBluetoothSupported(): boolean {
-    return isWebBluetoothSupported();
+    return isBleSupported();
   }
 
   public setTransport(customTransport: KettleTransport): void {
