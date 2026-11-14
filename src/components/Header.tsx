@@ -80,9 +80,9 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={toggleLang}
             aria-label={t.header.switchLangTitle}
             title={t.header.switchLangTitle}
-            className="h-9 min-w-[36px] px-2 sm:h-11 sm:min-w-[44px] sm:px-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white font-mono text-xs font-bold flex items-center justify-center transition-colors"
+            className="h-9 min-w-[36px] px-2 sm:h-11 sm:min-w-[44px] sm:px-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white text-xs font-bold tracking-wide flex items-center justify-center transition-colors"
           >
-            {lang === 'uk' ? 'UA' : 'EN'}
+            {lang === 'uk' ? 'EN' : 'UA'}
           </button>
 
           <button
