@@ -26,6 +26,46 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Generate Android kettle icons and splash screens
+        run: |
+          if ! command -v convert >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y imagemagick
+          fi
+          BG="#090E1A"
+
+          for spec in "mdpi:108:86" "hdpi:162:130" "xhdpi:216:172" "xxhdpi:324:260" "xxxhdpi:432:346"; do
+            IFS=: read -r dpi full inner <<< "$spec"
+            mkdir -p "android/app/src/main/res/mipmap-${dpi}"
+            convert -size "${full}x${full}" "xc:${BG}" \
+              \( public/pwa-maskable-512x512.png -resize "${inner}x${inner}" \) \
+              -gravity center -composite \
+              "android/app/src/main/res/mipmap-${dpi}/ic_launcher_foreground.png"
+          done
+
+          for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
+            IFS=: read -r dpi sz <<< "$spec"
+            convert public/pwa-512x512.png -resize "${sz}x${sz}" "android/app/src/main/res/mipmap-${dpi}/ic_launcher.png"
+            half=$(python3 -c "print(($sz - 1) / 2.0)")
+            convert public/pwa-maskable-512x512.png -resize "${sz}x${sz}" -alpha set \
+              \( -size "${sz}x${sz}" xc:none -fill white -draw "circle ${half},${half} ${half},0" \) \
+              -compose DstIn -composite \
+              "android/app/src/main/res/mipmap-${dpi}/ic_launcher_round.png"
+          done
+
+          for spec in \
+            "drawable:480:320" \
+            "drawable-land-mdpi:480:320" "drawable-land-hdpi:800:480" "drawable-land-xhdpi:1280:720" "drawable-land-xxhdpi:1600:960" "drawable-land-xxxhdpi:1920:1280" \
+            "drawable-port-mdpi:320:480" "drawable-port-hdpi:480:800" "drawable-port-xhdpi:720:1280" "drawable-port-xxhdpi:960:1600" "drawable-port-xxxhdpi:1280:1920"; do
+            IFS=: read -r dir w h <<< "$spec"
+            mkdir -p "android/app/src/main/res/${dir}"
+            min_dim=$(( w < h ? w : h ))
+            icon_sz=$(( min_dim * 45 / 100 ))
+            convert -size "${w}x${h}" "xc:${BG}" \
+              \( public/pwa-maskable-512x512.png -resize "${icon_sz}x${icon_sz}" \) \
+              -gravity center -composite \
+              "android/app/src/main/res/${dir}/splash.png"
+          done
+
       - name: Build Capacitor web bundle & sync Android
         run: bun run cap:sync
 
@@ -34,9 +74,10 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk ../Kettle-BLE-RK-G200S.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kettle-ble-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Kettle-BLE-RK-G200S-APK
+          path: Kettle-BLE-RK-G200S.apk
