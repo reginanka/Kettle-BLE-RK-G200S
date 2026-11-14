@@ -1,0 +1,6 @@
+{
+  "name": "Kettle BLE (RK-G200S)",
+  "description": "Автономний PWA та мобільний пульт керування розумним чайником RK-G200S через BLE (Web Bluetooth / Capacitor Android).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

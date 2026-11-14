@@ -5,12 +5,15 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
+  const isCapacitorBuild = process.env.VITE_CAPACITOR === 'true';
+
   return {
     base: './',
     plugins: [
       react(),
       tailwindcss(),
       VitePWA({
+        disable: isCapacitorBuild,
         registerType: 'autoUpdate',
         includeAssets: ['apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png', 'kettle-g200s.webp'],
         manifest: {
@@ -75,14 +78,14 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: true,
+          enabled: !isCapacitorBuild,
           type: 'module',
         },
       }),
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
     },
     server: {
